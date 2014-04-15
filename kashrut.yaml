@@ -1,0 +1,58 @@
+---
+facts:
+  service: kinja-mantle
+  pingurl: /ajax/ping
+  port:
+    http: 9020
+    jmx: 9091
+  notifications:
+    hipchat: service-room
+    email: service-team@gawker.com
+enviroments:
+  build:
+    scripts:
+      - scripts/build/is_assetonly.sh
+      - play2.2.1 -Dsbt.ivy.home=/tmp/ivy_kinja-mantle -Dsbt.log.noformat=true -DJENKINS_BUILD=true -Dformat.code=false clean "reboot full" test universal:package-zip-tarball
+      - node_modules/.bin/grunt
+      - scripts/build/package-assets.sh
+    deploy:
+      - scripts/deploy/assets-pre.yml
+      - $$COMMON-DEPLOY-PRE$$
+      - scripts/deploy/warmup.sh
+      - $$COMMON-DEPLOY-POST$$
+      - scripts/deploy/assets-post.yml
+  production:
+    jvm_option: |
+      -J-javaagent:/usr/share/newrelic/{{ service }}/newrelic.jar
+      -J-XX:ErrorFile=/var/tmp/hs_err_pid%p.log
+      -J-XX:+HeapDumpOnOutOfMemoryError
+      -J-XX:HeapDumpPath=/var/tmp
+      -J-Xms18094M
+      -J-Xmx18094M
+      -J-Xmn6830M
+      -J-XX:SurvivorRatio=2
+      -J-XX:PermSize=512m
+      -J-XX:MaxPermSize=512m
+      -J-XX:ReservedCodeCacheSize=128m
+      -J-XX:+UseConcMarkSweepGC
+      -J-XX:+CMSClassUnloadingEnabled
+      -J-XX:CMSInitiatingOccupancyFraction=70
+      -J-verbose:gc
+      -J-XX:+PrintGCDetails
+      -J-XX:+PrintGCDateStamps
+      -J-XX:+PrintTenuringDistribution
+      -J-Xloggc:/var/log/{{ service }}/gc-{{ service }}.`date \"+%Y-%m-%d_%H:%M:%S\"`.log
+      -J-Dcom.sun.management.jmxremote.port={{ port.jmx }}
+      -J-Dcom.sun.management.jmxremote.ssl=false
+      -J-Dcom.sun.management.jmxremote.authenticate=false
+      -J-agentpath:/usr/share/yourkit/libyjpagent.so=disablestacktelemetry,disableexceptiontelemetry,builtinprobes=none,delay=10000
+      -J-Dhttp.port={{ port.http }}
+      -J-Dlogger.resource=application-logger-live.xml
+      -J-Dconfig.resource=application-live.conf
+    monitoring:
+      - http: /api/ping
+        expected: /HTTP 200/
+      - http: /api/ping/db
+        expected: /connected/
+      - script: scripts/monitoring/testsomething.sh
+        expected: true
