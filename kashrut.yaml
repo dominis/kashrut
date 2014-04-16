@@ -24,10 +24,10 @@ environments:
         allow_kill9: true
         startup_timeout: 60
         lb_sleep: 60
+        warmup: scripts/deploy/warmup.sh
       hooks:
         pre: scripts/deploy/assets-pre.yml
         post: scripts/deploy/assets-post.yml
-        warmup: scripts/deploy/warmup.sh
   production:
     jvm_option: |
       -J-javaagent:/usr/share/newrelic/{{ service }}/newrelic.jar
