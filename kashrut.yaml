@@ -2,13 +2,13 @@
 facts:
   service: kinja-mantle
   pingurl: /ajax/ping
-  port:
+  ports:
     http: 9020
     jmx: 9091
   notifications:
     hipchat: service-room
     email: service-team@gawker.com
-enviroments:
+environments:
   build:
     scripts:
       - scripts/build/is_assetonly.sh
@@ -16,11 +16,18 @@ enviroments:
       - node_modules/.bin/grunt
       - scripts/build/package-assets.sh
     deploy:
-      - scripts/deploy/assets-pre.yml
-      - $$COMMON-DEPLOY-PRE$$
-      - scripts/deploy/warmup.sh
-      - $$COMMON-DEPLOY-POST$$
-      - scripts/deploy/assets-post.yml
+      variables:
+        serial: 8
+        any_errors_fatal: true
+        artifact: kinja-mantle-0.1.tgz
+        stop_timeout: 10
+        allow_kill9: true
+        startup_timeout: 60
+        lb_sleep: 60
+      hooks:
+        pre: scripts/deploy/assets-pre.yml
+        post: scripts/deploy/assets-post.yml
+        warmup: scripts/deploy/warmup.sh
   production:
     jvm_option: |
       -J-javaagent:/usr/share/newrelic/{{ service }}/newrelic.jar
