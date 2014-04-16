@@ -16,21 +16,21 @@ environments:
       - node_modules/.bin/grunt
       - scripts/build/package-assets.sh
     deploy:
-      variables:
-        serial: 8
-        any_errors_fatal: true
-        artifact: kinja-mantle-0.1.tgz
-        stop_timeout: 10
-        allow_kill9: true
-        startup_timeout: 60
-        lb_sleep: 60
-        warmup: scripts/deploy/warmup.sh
+      serial: 8
+      any_errors_fatal: true
+      artifact: kinja-mantle-0.1.tgz
+      stop_timeout: 10
+      allow_kill9: true
+      startup_timeout: 60
+      lb_sleep: 60
+      warmup: scripts/deploy/warmup.sh
       hooks:
         pre: scripts/deploy/assets-pre.yml
         post: scripts/deploy/assets-post.yml
   production:
+    pid: /var/run/{{ kashrut.facts.service }}.pid
     jvm_option: |
-      -J-javaagent:/usr/share/newrelic/{{ service }}/newrelic.jar
+      -J-javaagent:/usr/share/newrelic/{{ kashrut.facts.service }}/newrelic.jar
       -J-XX:ErrorFile=/var/tmp/hs_err_pid%p.log
       -J-XX:+HeapDumpOnOutOfMemoryError
       -J-XX:HeapDumpPath=/var/tmp
@@ -48,12 +48,12 @@ environments:
       -J-XX:+PrintGCDetails
       -J-XX:+PrintGCDateStamps
       -J-XX:+PrintTenuringDistribution
-      -J-Xloggc:/var/log/{{ service }}/gc-{{ service }}.`date \"+%Y-%m-%d_%H:%M:%S\"`.log
-      -J-Dcom.sun.management.jmxremote.port={{ port.jmx }}
+      -J-Xloggc:/var/log/{{ kashrut.facts.service }}/gc-{{ kashrut.facts.service }}.`date \"+%Y-%m-%d_%H:%M:%S\"`.log
+      -J-Dcom.sun.management.jmxremote.port={{ kashrut.facts.port.jmx }}
       -J-Dcom.sun.management.jmxremote.ssl=false
       -J-Dcom.sun.management.jmxremote.authenticate=false
       -J-agentpath:/usr/share/yourkit/libyjpagent.so=disablestacktelemetry,disableexceptiontelemetry,builtinprobes=none,delay=10000
-      -J-Dhttp.port={{ port.http }}
+      -J-Dhttp.port={{ kashrut.facts.port.http }}
       -J-Dlogger.resource=application-logger-live.xml
       -J-Dconfig.resource=application-live.conf
     monitoring:

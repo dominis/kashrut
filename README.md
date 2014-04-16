@@ -25,8 +25,8 @@ $ ansible-playbook --extra-vars "@/tmp/kashrut_exported_vars-201404161111.json"
 - hosts: ${host}
   gather_facts: False
   user: root
-  serial: ${kashrut.deploy.variables.serial}
-  any_errors_fatal: ${kashrut.deploy.variables.any_errors_fatal}
+  serial: ${kashrut.deploy.serial}
+  any_errors_fatal: ${kashrut.deploy.any_errors_fatal}
 
 tasks:
   - command: /bin/echo {{ kashrut.facts.service }}
@@ -37,7 +37,7 @@ tasks:
 
     - name: kill -9
       action: shell kill -9 {{ running_pid.stdout }}
-      when: down|failed and kashrut.deploy.variables.allow_kill9 != false
+      when: down|failed and kashrut.deploy.allow_kill9 != false
       ignore_errors: True
 
 ```
