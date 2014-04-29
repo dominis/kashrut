@@ -1,0 +1,61 @@
+---
+facts:
+  # name of the service
+  service: required
+  # url where we can ping the service
+  pingurl: required
+  # ports to listen on
+  ports:
+    http: required
+    jmx: optional
+  # notification channels
+  notifications:
+    hipchat: { optional: True, default: monitoring_room }
+    email: { optional: True, default: developers@gawker.com }
+deploy:
+  facts:
+    lb:
+      type: required
+      name: required
+    # size of the batch you want to roll out the serverice to prod
+    serial: required
+    # immediately stop the deploy on any errors
+    any_errors_fatal: { optional: True, default: True }
+    # name of the file you want to deploy
+    artifact: required
+    # timeout wait to stop the service
+    stop_timeout: { optional: True, default: 10 }
+    # if the stop_timeout reached shall we kill -9 the service
+    allow_kill9: { optional: True, default: True }
+    # timeout wait to start the service
+    startup_timeout: { optional: True, default: 60 }
+    # seconds to sleep between two batches (this is the slow rampup time)
+    lb_sleep: { optional: True, default: 30 }
+    # warmup script location
+    warmup: optional
+    # hooks for custom pre/post deploy actions
+  hooks:
+    # included before the deploy (eg: distributing assets)
+    pre: optional
+    # included after the deploy (eg: update assets revisions)
+    post: optional
+build:
+  # exec is exec you can use | for multi line execution
+  exec: required
+production:
+  facts:
+    # command to start the service (eg: ./bin/start or start service)
+    start: required
+    # command to stop the service (eg: kill `pidof service` or stop service)
+    stop: required
+    # target hosts you want to deploy to
+    hosts: required
+    # file you store the pid
+    pid: required
+    # additional jvm options
+    jvm_option: optional
+monitoring:
+  - http: optional
+    expected: optional
+  - exec: optional
+    expected: optional

@@ -13,36 +13,42 @@ facts:
     hipchat: service-room
     email: service-team@gawker.com
 deploy:
-  # size of the batch you want to roll out the serverice to prod
-  serial: 8
-  # immediately stop the deploy on any errors
-  any_errors_fatal: true
-  # name of the file you want to deploy
-  artifact: kinja-mantle-0.1.tgz
-  # timeout wait to stop the service
-  stop_timeout: 10
-  # if the stop_timeout reached shall we kill -9 the service
-  allow_kill9: true
-  # timeout wait to start the service
-  startup_timeout: 60
-  # seconds to sleep between two batches (this is the slow rampup time)
-  lb_sleep: 60
-  # warmup script location
-  warmup: scripts/deploy/warmup.sh
-  # hooks for custom pre/post deploy actions
+  facts:
+    lb:
+      # nsc or elb
+      type: nsc
+      name: KinjaMantlePool
+    # size of the batch you want to roll out the serverice to prod
+    serial: 8
+    # immediately stop the deploy on any errors
+    any_errors_fatal: true
+    # name of the file you want to deploy
+    artifact: kinja-mantle-0.1.tgz
+    # timeout wait to stop the service
+    stop_timeout: 10
+    # if the stop_timeout reached shall we kill -9 the service
+    allow_kill9: true
+    # timeout wait to start the service
+    startup_timeout: 60
+    # seconds to sleep between two batches (this is the slow rampup time)
+    lb_sleep: 60
+    # warmup script location
+    warmup: scripts/deploy/warmup.sh
+    # hooks for custom pre/post deploy actions
   hooks:
     pre: scripts/deploy/assets-pre.yml
     post: scripts/deploy/assets-post.yml
-environments:
-  build:
-    variables:
-      CI_BUILD: TRUE
-    scripts:
-      - scripts/build/is_assetonly.sh
-      - play2.2.1 -Dsbt.ivy.home=/tmp/ivy_kinja-mantle -Dsbt.log.noformat=true -DJENKINS_BUILD=true -Dformat.code=false clean "reboot full" test universal:package-zip-tarball
-      - node_modules/.bin/grunt
-      - scripts/build/package-assets.sh
-  production:
+build:
+  exec: |
+    scripts/build/is_assetonly.sh
+    play2.2.1 -Dsbt.ivy.home=/tmp/ivy_kinja-mantle -Dsbt.log.noformat=true -DJENKINS_BUILD=true -Dformat.code=false clean "reboot full" test universal:package-zip-tarball
+    node_modules/.bin/grunt
+    scripts/build/package-assets.sh
+production:
+  facts:
+    start: start {{ kashrut.facts.service }}
+    stop: start {{ kashrut.facts.service }}
+    hosts: KinjaMantlePool
     pid: /var/run/{{ kashrut.facts.service }}.pid
     jvm_option: |
       -J-javaagent:/usr/share/newrelic/{{ kashrut.facts.service }}/newrelic.jar

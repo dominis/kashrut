@@ -1,4 +1,4 @@
-# Notes
+# Kashrut
 
 ```
 kashrut init <- creates the config template for the project
@@ -41,3 +41,9 @@ tasks:
       ignore_errors: True
 
 ```
+
+
+### notes
+- list mandantory keys
+- validate mandantory keys
+- create kashrut.yml template
